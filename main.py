@@ -1,45 +1,42 @@
-import os
 import streamlit as st
 import fitz  # PyMuPDF
 import re
 import nltk
 from nltk.tokenize import sent_tokenize
 
-# Define a custom directory for NLTK data (inside your project directory)
-NLTK_DATA_PATH = os.path.join(os.path.dirname(__file__), "nltk_data")
-os.makedirs(NLTK_DATA_PATH, exist_ok=True)
-
-# Set the NLTK_DATA environment variable so NLTK looks there first
-os.environ["NLTK_DATA"] = NLTK_DATA_PATH
-nltk.data.path.append(NLTK_DATA_PATH)
-
-# Force-download the necessary NLTK resources to the specified directory
-nltk.download("punkt", download_dir=NLTK_DATA_PATH)
-nltk.download("punkt_tab", download_dir=NLTK_DATA_PATH)
+# Download necessary NLTK resources
+nltk.download("punkt")
+nltk.download("punkt_tab")
 
 def extract_shall_sentences(pdf_file):
     text = ""
-    # Read the PDF content from the uploaded file
+    # Open the PDF and extract text
     with fitz.open(stream=pdf_file.read(), filetype="pdf") as doc:
         for page in doc:
             text += page.get_text("text") + " "
-    # Tokenize text into sentences and filter those containing "shall"
+    # Tokenize the text into sentences
     sentences = sent_tokenize(text)
-    shall_sentences = [sent for sent in sentences if re.search(r'\bshall\b', sent, re.IGNORECASE)]
+    # Filter sentences containing 'shall'
+    shall_sentences = [sentence for sentence in sentences if re.search(r'\bshall\b', sentence, re.IGNORECASE)]
     return shall_sentences
 
 # Streamlit UI
-st.title("📄 PDF 'Shall' Extractor")
-st.write("Upload a PDF, and I'll extract all sentences containing the word **'shall'**.")
+st.title("PDF 'Shall' Extractor with Checkboxes")
+st.write("Upload a PDF and review each sentence containing 'shall'. Tick the box if the condition is satisfied.")
 
 uploaded_file = st.file_uploader("Choose a PDF file", type="pdf")
 
 if uploaded_file:
     sentences = extract_shall_sentences(uploaded_file)
-    st.subheader("📄 Extracted Sentences:")
     if sentences:
-        for i, sentence in enumerate(sentences, 1):
-            st.write(f"**{i}.** {sentence}")
+        st.write(f"Found {len(sentences)} sentences containing 'shall'. Please review below:")
+        results = {}
+        for i, sentence in enumerate(sentences):
+            # Create a checkbox for each sentence
+            is_checked = st.checkbox(f"Sentence {i+1}: {sentence}", key=f"checkbox_{i}")
+            results[sentence] = is_checked
+        st.write("### Review Results:")
+        for sentence, satisfied in results.items():
+            st.write(f"**{'Satisfied' if satisfied else 'Not Satisfied'}:** {sentence}")
     else:
         st.write("No sentences containing 'shall' were found.")
-    st.success("✅ Done!")
