@@ -1,28 +1,39 @@
-# main.py
-import tkinter as tk
-from tkinter import filedialog
-import extract_shall  # import your unchanged code
+import streamlit as st
+import fitz  # PyMuPDF
+import re
+import nltk
+from nltk.tokenize import sent_tokenize
 
-def main():
-    # Hide that default Tk window
-    root = tk.Tk()
-    root.withdraw()
+nltk.download('punkt')
 
-    # Ask the user to pick a PDF
-    print("Please select a PDF file...")
-    pdf_path = filedialog.askopenfilename(filetypes=[("PDF files", "*.pdf")])
+def extract_shall_sentences(pdf_file):
+    text = ""
 
-    if not pdf_path:
-        print("No file selected. Exiting...")
-        return
+    # Open the PDF and extract text
+    with fitz.open(stream=pdf_file.read(), filetype="pdf") as doc:
+        for page in doc:
+            text += page.get_text("text") + " "
 
-    # Call the function from your original code
-    sentences_with_shall = extract_shall.extract_shall_sentences(pdf_path)
+    # Tokenize into sentences
+    sentences = sent_tokenize(text)
 
-    # Print results
-    print("\nFound the following 'shall' sentences:\n")
-    for i, sentence in enumerate(sentences_with_shall, 1):
-        print(f"{i}. {sentence}")
+    # Extract sentences containing the word "shall"
+    shall_sentences = [sent for sent in sentences if re.search(r'\bshall\b', sent, re.IGNORECASE)]
 
-if __name__ == "__main__":
-    main()
+    return shall_sentences
+
+# Streamlit UI
+st.title("📄 PDF Shall Extractor")
+st.write("Upload a PDF, and this app will extract all sentences containing 'shall'.")
+
+uploaded_file = st.file_uploader("Choose a PDF file", type="pdf")
+
+if uploaded_file is not None:
+    sentences = extract_shall_sentences(uploaded_file)
+    
+    if sentences:
+        st.subheader("Sentences containing 'shall':")
+        for i, sentence in enumerate(sentences, 1):
+            st.write(f"{i}. {sentence}")
+    else:
+        st.write("No sentences containing 'shall' found.")
