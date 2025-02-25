@@ -5,12 +5,16 @@ import re
 import nltk
 from nltk.tokenize import sent_tokenize
 
-# Force NLTK to download punkt if missing
-nltk.data.path.append(os.path.expanduser("~") + "/nltk_data/")
+# Set custom NLTK data path inside the Streamlit environment
+NLTK_DATA_PATH = os.path.join(os.getcwd(), "nltk_data")
+os.makedirs(NLTK_DATA_PATH, exist_ok=True)
+nltk.data.path.append(NLTK_DATA_PATH)
+
+# Force-download `punkt` if it's missing
 try:
     nltk.data.find("tokenizers/punkt")
 except LookupError:
-    nltk.download("punkt")
+    nltk.download("punkt", download_dir=NLTK_DATA_PATH)
 
 def extract_shall_sentences(pdf_file):
     text = ""
