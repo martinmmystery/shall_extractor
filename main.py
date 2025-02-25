@@ -5,12 +5,12 @@ import re
 import nltk
 from nltk.tokenize import sent_tokenize
 
-# Set custom NLTK data path inside the Streamlit environment
-NLTK_DATA_PATH = os.path.join(os.getcwd(), "nltk_data")
+# ✅ Force a writable NLTK data path inside Streamlit Cloud
+NLTK_DATA_PATH = os.path.join(os.path.dirname(__file__), "nltk_data")
 os.makedirs(NLTK_DATA_PATH, exist_ok=True)
 nltk.data.path.append(NLTK_DATA_PATH)
 
-# Force-download `punkt` if it's missing
+# ✅ Force-download `punkt` to the correct directory
 try:
     nltk.data.find("tokenizers/punkt")
 except LookupError:
@@ -28,7 +28,7 @@ def extract_shall_sentences(pdf_file):
 
     return shall_sentences
 
-# Streamlit UI
+# ✅ Streamlit UI
 st.title("📄 PDF 'Shall' Extractor")
 st.write("Upload a PDF, and I will extract sentences containing the word **'shall'**.")
 
